@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - Receipt Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .email-header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .email-body {
+            padding: 40px 30px;
+            background: white;
+        }
+        .greeting {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: transform 0.2s ease;
+        }
+        .verify-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .link-fallback {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .link-fallback p {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .link-fallback code {
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            display: block;
+            margin-top: 10px;
+        }
+        .security-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .security-notice .icon {
+            color: #856404;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        .security-notice p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer .company-info {
+            font-weight: 600;
+            color: #495057;
+        }
+        .features {
+            margin: 30px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        .feature-item .emoji {
+            font-size: 20px;
+            margin-right: 15px;
+        }
+        .feature-item span {
+            color: #555;
+            font-size: 14px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            .email-body {
+                padding: 30px 20px;
+            }
+            .email-header {
+                padding: 30px 20px;
+            }
+            .verify-button {
+                display: block;
+                text-align: center;
+                margin: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <span class="icon">✉️</span>
+            <h1>Verify Your Email</h1>
+            <p>Almost there! Just one more step...</p>
+        </div>
+        
+        <div class="email-body">
+            <div class="greeting">
+                Hello {{ user_name }}! 👋
+            </div>
+            
+            <div class="message">
+                Thank you for joining Receipt Manager! To complete your account setup and ensure secure access to your account, please verify your email address.
+            </div>
+            
+            <div class="button-container">
+                <a href="{{ verification_url }}" class="verify-button">
+                    ✅ Verify Email Address
+                </a>
+            </div>
+            
+            <div class="features">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">What you can do after verification:</h3>
+                <div class="feature-item">
+                    <span class="emoji">📸</span>
+                    <span><strong>Upload receipts</strong> - Take photos or upload PDF receipts</span>
+                </div>
+                <div class="feature-item">
+                    <span class="emoji">🤖</span>
+                    <span><strong>AI categorization</strong> - Automatic expense categorization</span>
+                </div>
+                <div class="feature-item">
+                    <span class="emoji">📊</span>
+                    <span><strong>Generate reports</strong> - Detailed spending analytics</span>
+                </div>
+                <div class="feature-item">
+                    <span class="emoji">📤</span>
+                    <span><strong>Export data</strong> - Download as CSV or PDF</span>
+                </div>
+            </div>
+            
+            <div class="link-fallback">
+                <p><strong>Button not working?</strong> Copy and paste this link into your browser:</p>
+                <code>{{ verification_url }}</code>
+            </div>
+            
+            <div class="security-notice">
+                <p>
+                    <span class="icon">🔒</span>
+                    <strong>Security Notice:</strong> This verification link will expire in 24 hours for your security. If you didn't create an account with Receipt Manager, you can safely ignore this email.
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="company-info">Receipt Manager</div>
+            <p>Making expense tracking simple and smart</p>
+            <p>{{ frontend_url }}</p>
+            <p style="margin-top: 20px; font-size: 12px;">
+                This email was sent to {{ email }}. If you have any questions, please contact our support team.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

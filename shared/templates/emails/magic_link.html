@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Magic Login Link</title>
+    <style>
+        .email-container {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .email-header {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        .email-body {
+            background-color: white;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .login-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Receipt Manager</h1>
+            <p>Your Magic Login Link</p>
+        </div>
+        <div class="email-body">
+            <h2>Hello {{ user_name }}!</h2>
+            <p>Click the button below to sign in to your Receipt Manager account:</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ magic_url }}" class="login-button">Sign In to Receipt Manager</a>
+            </div>
+            
+            <p>Or copy and paste this link in your browser:</p>
+            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                {{ magic_url }}
+            </p>
+            
+            <p><strong>Important:</strong> This link will expire in 1 hour for security reasons.</p>
+            
+            <p>If you didn't request this login link, please ignore this email.</p>
+            
+            <p>Best regards,<br>
+            The Receipt Manager Team</p>
+        </div>
+        <div class="footer">
+            <p>© {{ frontend_url }} - Receipt Manager</p>
+        </div>
+    </div>
+</body>
+</html>
