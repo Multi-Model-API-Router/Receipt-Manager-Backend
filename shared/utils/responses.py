@@ -61,3 +61,14 @@ def no_content_response(message: str = "Operation completed successfully") -> Re
         data=None,
         status_code=status.HTTP_204_NO_CONTENT
     )
+
+def accepted_response(message: str = "Operation still processing") -> Response:
+    """
+    Standardized no content response
+    """
+    return success_response(
+        message=message,
+        data=None,
+        status_code=status.HTTP_202_ACCEPTED
+    )
+

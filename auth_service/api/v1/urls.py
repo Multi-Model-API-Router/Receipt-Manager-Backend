@@ -9,8 +9,6 @@ from .views import (
     ResendVerificationView,
     RefreshTokenView,
     LogoutView,
-    LogoutAllDevicesView,
-    ForceLogoutUserView,  # New
     CheckTokenStatusView,  # New
     UserStatsView
 )
@@ -24,8 +22,6 @@ urlpatterns = [
     
     # Logout endpoints
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('logout/all-devices/', LogoutAllDevicesView.as_view(), name='logout_all_devices'),
-    path('admin/force-logout/', ForceLogoutUserView.as_view(), name='admin_force_logout'),
     
     # Email verification endpoints
     path('email/verify/', EmailVerificationView.as_view(), name='verify_email'),

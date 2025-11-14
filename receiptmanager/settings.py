@@ -29,8 +29,15 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-default")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] 
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+# ALLOWED_HOSTS = ['*'] 
+ALLOWED_HOSTS = [
+    'localhost:3000',
+    '127.0.0.1:3000',
+    '0869a9744804.ngrok-free.app',  # Your ngrok domain
+    '.ngrok-free.app',  # All ngrok domains
+]
+
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://receipt-manager-frontend-2dyd.onrender.com')
 
 from datetime import timedelta
 
@@ -77,7 +84,6 @@ REST_FRAMEWORK = {
     #     'rest_framework.parsers.FormParser',
     #     'rest_framework.parsers.MultiPartParser',
     # ],
-    'DEFAULT_PAGINATION_CLASS': 'shared.utils.pagination.OptimizedPageNumberPagination',
     'PAGE_SIZE': 20,
     'EXCEPTION_HANDLER': 'shared.utils.exceptions.exception_handler',
 }
@@ -121,30 +127,305 @@ CACHES = {
 }
 
 # Celery Beat Schedule for cleanup tasks
+# Celery Beat Schedule for all periodic tasks
 CELERY_BEAT_SCHEDULE = {
+    # ===========================
+    # Auth Service Tasks
+    # ===========================
     'cleanup-expired-magic-links': {
-        'task': 'apps.auth_service.tasks.cleanup_expired_magic_links',
-        'schedule': crontab(minute=0, hour=2),  # Daily at 2 AM
+        'task': 'auth_service.tasks.cleanup_expired_magic_links',
+        'schedule': crontab(minute=0, hour=2),  # Daily at 2:00 AM
     },
     'cleanup-expired-email-verifications': {
-        'task': 'apps.auth_service.tasks.cleanup_expired_email_verifications',
+        'task': 'auth_service.tasks.cleanup_expired_email_verifications',
         'schedule': crontab(minute=30, hour=2),  # Daily at 2:30 AM
     },
-    'cleanup-expired-token-blacklist': {
-        'task': 'apps.auth_service.tasks.cleanup_expired_token_blacklist',
-        'schedule': crontab(minute=0, hour=3),  # Daily at 3 AM
+    'cleanup-expired-tokens': {
+        'task': 'auth_service.tasks.cleanup_expired_token_blacklist',
+        'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
     },
     'security-audit-tokens': {
-        'task': 'apps.auth_service.tasks.security_audit_tokens',
+        'task': 'auth_service.tasks.security_audit_tokens',
+        'schedule': crontab(minute=0, hour=2),  # 2 AM daily
+    },
+    'invalidate-stale-tokens': {
+        'task': 'auth_service.tasks.invalidate_stale_tokens',
+        'schedule': crontab(minute=0, hour='*/12'),  # Every 12 hours
+    },
+    'cleanup-expired-magic-links': {
+        'task': 'auth_service.tasks.cleanup_expired_magic_links',
+        'schedule': crontab(minute=0, hour=3),  # 3 AM daily
+    },
+    
+    # ===========================
+    # AI Service Tasks
+    # ===========================
+    'cleanup-expired-ai-jobs': {
+        'task': 'ai_service.tasks.ai_tasks.cleanup_expired_processing_jobs',
+        'schedule': crontab(hour=2, minute=0),  # Daily at 2:00 AM
+    },
+    'ai-services-health-check': {
+        'task': 'ai_service.tasks.ai_tasks.health_check_ai_services',
+        'schedule': crontab(minute='*/5'),  # Every 5 minutes
+    },
+    
+    # ===========================
+    # Receipt Service - Cleanup Tasks
+    # ===========================
+    'cleanup-old-receipts': {
+        'task': 'receipt_service.tasks.cleanup_tasks.cleanup_old_receipts',
+        'schedule': crontab(minute=0, hour=5, day_of_week=0),  # Weekly on Sunday at 5:00 AM
+        'kwargs': {'days_old': 730},  # 2 years old
+    },
+    'update-category-usage-stats': {
+        'task': 'receipt_service.tasks.cleanup_tasks.update_category_usage_stats',
+        'schedule': crontab(minute=0, hour='*/12'),  # Every 12 hours
+    },
+    'cleanup-expired-cache-entries': {
+        'task': 'receipt_service.tasks.cleanup_tasks.cleanup_expired_cache_entries',
+        'schedule': crontab(minute=0, hour=1),  # Daily at 1:00 AM
+    },
+    'generate-daily-stats-report': {
+        'task': 'receipt_service.tasks.cleanup_tasks.generate_daily_stats_report',
+        'schedule': crontab(minute=30, hour=0),  # Daily at 12:30 AM
+    },
+    
+    # ===========================
+    # Receipt Service - File Tasks
+    # ===========================
+    'cleanup-old-temp-files': {
+        'task': 'receipt_service.tasks.file_tasks.cleanup_old_temp_files',
         'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
+    },
+    'cleanup-orphaned-files': {
+        'task': 'receipt_service.tasks.file_tasks.cleanup_orphaned_files',
+        'schedule': crontab(minute=0, hour=4),  # Daily at 4:00 AM
+    },
+    'cleanup-failed-receipts': {
+        'task': 'receipt_service.tasks.file_tasks.cleanup_failed_receipts',
+        'schedule': crontab(minute=30, hour=3),  # Daily at 3:30 AM
+        'kwargs': {'days_old': 7},  # 7 days old
+    },
+    'update-storage-statistics': {
+        'task': 'receipt_service.tasks.file_tasks.update_storage_statistics',
+        'schedule': crontab(minute='*/30'),  # Every 30 minutes
+    },
+    'daily-file-maintenance': {
+        'task': 'receipt_service.tasks.file_tasks.daily_maintenance_task',
+        'schedule': crontab(minute=0, hour=5),  # Daily at 5:00 AM
+    },
+    'check-storage-health': {
+        'task': 'receipt_service.tasks.file_tasks.check_storage_health',
+        'schedule': crontab(minute='*/15'),  # Every 15 minutes
+    },
+    'check-duplicate-receipts': {
+        'task': 'receipt_service.tasks.file_tasks.check_duplicate_receipts',
+        'schedule': crontab(minute=0, hour=6, day_of_week=1),  # Weekly on Monday at 6:00 AM
+    },
+    # ===========================
+    # Receipt Service - Export Tasks
+    # ===========================
+    'cleanup-expired-export-files': {
+        'task': 'receipt_service.tasks.export_tasks.cleanup_expired_export_files',
+        'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
+    },
+    'cleanup-stale-export-tasks': {
+        'task': 'receipt_service.tasks.export_tasks.cleanup_stale_export_tasks',
+        'schedule': crontab(minute=30, hour=3),  # Daily at 3:30 AM
     },
 }
 
+
+# Celery Task Routing Configuration
 CELERY_TASK_ROUTES = {
-    'auth_service.tasks.send_magic_link_email_async': {'queue': 'default'},
-    'auth_service.tasks.send_email_verification_async': {'queue': 'default'},
-    'auth_service.tasks.send_welcome_email_async': {'queue': 'default'},
+    # ===========================
+    # Auth Service Tasks
+    # ===========================
+    'auth_service.tasks.send_magic_link_email_async': {
+        'queue': 'default'
+    },
+    'auth_service.tasks.send_verification_email_async': {
+        'queue': 'default'
+    },
+    'auth_service.tasks.send_welcome_email_async': {
+        'queue': 'default'
+    },
+    'auth_service.tasks.cleanup_expired_magic_links': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.auth',
+    },
+    'auth_service.tasks.cleanup_expired_email_verifications': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.auth',
+    },
+    'auth_service.tasks.cleanup_expired_token_blacklist': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.auth',
+    },
+    'auth_service.tasks.security_audit_tokens': {
+        'queue': 'monitoring',
+        'routing_key': 'monitoring.security',
+    },
+    'auth_service.tasks.invalidate_stale_tokens': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.auth', 
+    },
+    
+    # ===========================
+    # AI Service Task Routing
+    # ===========================
+    'ai_service.tasks.ai_tasks.process_receipt_ai_task': {
+        'queue': 'ai_processing',
+        'routing_key': 'ai.processing',
+    },
+    'ai_service.tasks.ai_tasks.batch_process_receipts_task': {
+        'queue': 'ai_batch',
+        'routing_key': 'ai.batch',
+    },
+    'ai_service.tasks.ai_tasks.cleanup_expired_processing_jobs': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.cleanup',
+    },
+    'ai_service.tasks.ai_tasks.health_check_ai_services': {
+        'queue': 'monitoring',
+        'routing_key': 'monitoring.health',
+    },
+    
+    # ===========================
+    # Receipt Service - Cleanup Task Routing
+    # ===========================
+    'receipt_service.tasks.cleanup_tasks.cleanup_old_receipts': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.cleanup',
+    },
+    'receipt_service.tasks.cleanup_tasks.update_category_usage_stats': {
+        'queue': 'cache',
+        'routing_key': 'cache.update',
+    },
+    'receipt_service.tasks.cleanup_tasks.cleanup_expired_cache_entries': {
+        'queue': 'cache',
+        'routing_key': 'cache.cleanup',
+    },
+    'receipt_service.tasks.cleanup_tasks.generate_daily_stats_report': {
+        'queue': 'monitoring',
+        'routing_key': 'monitoring.stats',
+    },
+    
+    # ===========================
+    # Receipt Service - File Task Routing
+    # ===========================
+    'receipt_service.tasks.file_tasks.cleanup_old_temp_files': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.cleanup',
+    },
+    'receipt_service.tasks.file_tasks.cleanup_orphaned_files': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.cleanup',
+    },
+    'receipt_service.tasks.file_tasks.cleanup_failed_receipts': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.cleanup',
+    },
+    'receipt_service.tasks.file_tasks.update_storage_statistics': {
+        'queue': 'cache',
+        'routing_key': 'cache.update',
+    },
+    'receipt_service.tasks.file_tasks.export_ledger_async_task': {
+        'queue': 'export',
+        'routing_key': 'export.ledger',
+    },
+    'receipt_service.tasks.file_tasks.daily_maintenance_task': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.file',
+    },
+    'receipt_service.tasks.file_tasks.check_storage_health': {
+        'queue': 'monitoring',
+        'routing_key': 'monitoring.health',
+    },
+    'receipt_service.tasks.file_tasks.check_duplicate_receipts': {
+        'queue': 'monitoring',
+        'routing_key': 'monitoring.integrity',
+    },
+    
+    # ===========================
+    # Receipt Service - Export Task Routing
+    # ===========================
+    'receipt_service.tasks.export_tasks.cleanup_expired_export_files': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.export',
+    },
+    'receipt_service.tasks.export_tasks.cleanup_stale_export_tasks': {
+        'queue': 'maintenance',
+        'routing_key': 'maintenance.export',
+    },
 }
+
+# Celery Queue Configuration
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_QUEUES = {
+    'default': {
+        'exchange': 'default',
+        'routing_key': 'default',
+    },
+    'ai_processing': {
+        'exchange': 'ai',
+        'routing_key': 'ai.processing',
+    },
+    'ai_batch': {
+        'exchange': 'ai',
+        'routing_key': 'ai.batch',
+    },
+    'file_processing': {
+        'exchange': 'file',
+        'routing_key': 'file.*',
+    },
+    'export': {
+        'exchange': 'export',
+        'routing_key': 'export.*',
+    },
+    'maintenance': {
+        'exchange': 'maintenance',
+        'routing_key': 'maintenance.*',
+    },
+    'cache': {
+        'exchange': 'cache',
+        'routing_key': 'cache.*',
+    },
+    'monitoring': {
+        'exchange': 'monitoring',
+        'routing_key': 'monitoring.*',
+    },
+}
+
+
+AI_SERVICE = {
+    'OCR_ENGINE': 'tesseract',
+    'CATEGORIZATION_MODEL': 'gemini-2.5-flash',
+    'MAX_PROCESSING_TIME': 300,
+    'MAX_RETRIES': 3,
+    'CONFIDENCE_THRESHOLD_OCR': 0.65,
+    'CONFIDENCE_THRESHOLD_CATEGORIZATION': 0.6,
+    'BATCH_SIZE': 10,
+    'ENABLE_CACHING': True,
+    'CACHE_TTL': 3600,
+}
+
+# OCR Settings
+OCR_MIN_CONFIDENCE = 0.65  # Lower threshold for Tesseract (vs 0.7 for Google Vision)
+OCR_MAX_PROCESSING_TIME = 30
+OCR_CACHE_TTL = 3600
+
+# Tesseract Configuration
+TESSERACT_CMD = None  # Auto-detect, or set explicit path for Windows:
+# TESSERACT_CMD = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+
+# Rate Limiting Settings
+GEMINI_RPM = 60
+GEMINI_RPD = 1000
+GEMINI_BURST = 5
+
+GOOGLE_GEMINI_API_KEY = os.environ.get("GOOGLE_GEMINI_API_KEY")
 
 # Application definition
 
@@ -164,7 +445,9 @@ INSTALLED_APPS = [
     'django_celery_beat',
 
     # Local apps
-    'auth_service.apps.AuthServiceConfig'
+    'auth_service.apps.AuthServiceConfig',
+    'receipt_service.apps.ReceiptServiceConfig',
+    'ai_service.apps.AiServiceConfig'
 ]
 
 MIDDLEWARE = [
@@ -173,17 +456,32 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     
-    # Your CSRF exemption middleware MUST come before CsrfViewMiddleware
-    # 'auth_service.middleware.api_csrf_middleware.CSRFExemptAPIMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',  # This should come AFTER your middleware
+    # Custom logging middleware (early in pipeline)
+    'shared.middleware.logging_middleware.LoggingContextMiddleware',
     
+    # CSRF exemption middleware MUST come before CsrfViewMiddleware
+    # 'auth_service.middleware.api_csrf_middleware.CSRFExemptAPIMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware', 
+    
+    # Authentication middleware (REQUIRED for admin)
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    
+    # Security middleware (after authentication)
     'shared.middleware.security_middleware.SecurityMiddleware',
+    'shared.middleware.security_middleware.IPWhitelistMiddleware',
+    
+    # JWT blacklist middleware (needs authenticated user)
     'auth_service.middleware.jwt_blacklist_middleware.JWTBlacklistMiddleware',
+    
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # Structured logging (late in pipeline)
+    'shared.middleware.logging_middleware.StructuredLoggingMiddleware',
+    
+    # Exception handling (last)
+    'shared.middleware.drf_exceptions.DRFExceptionMiddleware',
 ]
-
 
 ROOT_URLCONF = 'receiptmanager.urls'
 
@@ -260,8 +558,11 @@ AUTH_PASSWORD_VALIDATORS = [
 MAX_FAILED_LOGIN_ATTEMPTS = 5
 ACCOUNT_LOCK_MINUTES = 30
 MAGIC_LINK_EXPIRY_MINUTES = 60
-MAX_REQUESTS_PER_IP_PER_MINUTE = 60
-MAX_AUTH_REQUESTS_PER_IP_PER_MINUTE = 10
+MAX_UPDATE_EMAIL_ATTEMPTS_PER_DAY=10
+# Security and rate limiting settings
+MAX_REQUESTS_PER_IP_PER_MINUTE = os.environ.get('MAX_REQUESTS_PER_IP_PER_MINUTE', 60)
+MAX_AUTH_REQUESTS_PER_IP_PER_MINUTE = os.environ.get('MAX_AUTH_REQUESTS_PER_IP_PER_MINUTE', 10)
+ADMIN_WHITELISTED_IPS = os.environ.get('ADMIN_WHITELISTED_IPS', '').split(',') if os.environ.get('ADMIN_WHITELISTED_IPS') else []
 
 
 # Internationalization
@@ -289,37 +590,465 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins (for development)
 
-CORS_ALLOW_CREDENTIALS = True
-# CORS_ALLOW_HEADERS = [
-#     "content-type",
-#     "authorization",
-#     "X-CSRFTOKEN",
-#     "X-Requested-With",
-# ]
+# For development - disable some security features
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'ngrok-skip-browser-warning',  # ✅ Important for ngrok
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+
+
+
+# Create logs directory if it doesn't exist
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+# Logging Configuration - Updated for AI Service and Celery
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    
+    # Formatters with safe field handling
     "formatters": {
         "verbose": {
-            "format": "[%(asctime)s] [%(levelname)s] [%(name)s] [corr_id=%(correlation_id)s] %(message)s",
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [{levelname:8}] [{name}] [corr_id={corr_id}] [user={user}] [ip={ip}] [method={method}] [path={path}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
+        "simple": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [{levelname:8}] [{name}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "detailed": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [{levelname:8}] [{name}] [corr_id={corr_id}] [user={user}] [ip={ip}] [method={method}] [path={path}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "security": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [SECURITY] [{levelname}] [corr_id={corr_id}] [user={user}] [ip={ip}] [path={path}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "performance": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [PERFORMANCE] [{name}] [corr_id={corr_id}] [duration={duration}ms] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "audit": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [AUDIT] [user={user}] [ip={ip}] [action={action}] [resource={resource}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "celery": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [{levelname:8}] [{name}] [task={task_name}] [receipt={receipt_id}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "ai_processing": {
+            "()": "shared.logging.SafeFormatter",
+            "format": "[{asctime}] [AI] [{levelname:8}] [{name}] [receipt={receipt_id}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "json": {
+            "()": "shared.logging.SafeJSONFormatter",
+        }
     },
+    
+    # Filters
     "filters": {
-        "correlation": {
+        "correlation_id": {
             "()": "shared.logging.CorrelationIdFilter",
         },
+        "user_context": {
+            "()": "shared.logging.UserContextFilter",
+        },
+        "performance": {
+            "()": "shared.logging.PerformanceFilter",
+        },
+        "security": {
+            "()": "shared.logging.SecurityFilter",
+        },
+        "audit": {
+            "()": "shared.logging.AuditFilter",
+        },
+        "celery_task": { 
+            "()": "shared.logging.CeleryTaskFilter",
+        },
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
     },
+    
+    # Handlers
     "handlers": {
+        # Console handler for development
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
-            "filters": ["correlation"],
+            "filters": ["correlation_id", "user_context"],
+        },
+        
+        # Simple console for Django internal logs
+        "console_simple": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        
+        # Celery console
+        "celery_console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "celery",
+            "filters": ["celery_task"],
+        },
+        
+        # Application logs
+        "app_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "application.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "filters": ["correlation_id", "user_context"],
+        },
+        
+        # Error logs
+        "error_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "errors.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 20,
+            "formatter": "detailed",
+            "filters": ["correlation_id", "user_context"],
+        },
+        
+        # Security logs
+        "security_file": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "security.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 30,
+            "formatter": "security",
+            "filters": ["correlation_id", "user_context", "security"],
+        },
+        
+        # AI Processing logs
+        "ai_processing_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "ai_processing.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 15,
+            "formatter": "ai_processing",
+            "filters": ["correlation_id", "user_context"],
+        },
+        
+        # Celery task logs
+        "celery_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "celery.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 10,
+            "formatter": "celery",
+            "filters": ["celery_task"],
+        },
+        
+        # Currency API logs
+        "currency_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "currency.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "filters": ["correlation_id"],
+        },
+        
+        # Circuit breaker logs
+        "circuit_breaker_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "circuit_breaker.log"),
+            "maxBytes": 1024 * 1024 * 3,  # 3 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "filters": ["correlation_id"],
+        },
+        
+        # Database logs
+        "db_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "database.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,
+            "formatter": "simple",
+        },
+        
+        # Audit logs
+        "audit_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "audit.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 50,
+            "formatter": "audit",
+            "filters": ["correlation_id", "user_context", "audit"],
         },
     },
+    
+    # Loggers
+    "loggers": {
+        # Django framework loggers
+        "django": {
+            "handlers": ["console_simple", "app_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console", "app_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["security_file", "error_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["db_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        
+        # Application loggers
+        "auth_service": {
+            "handlers": ["console", "app_file", "error_file", "security_file", "audit_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "receipt_service": {
+            "handlers": ["console", "app_file", "error_file", "audit_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        
+        # AI Service loggers
+        "ai_service": {
+            "handlers": ["console", "ai_processing_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "ai_service.services": {
+            "handlers": ["console", "ai_processing_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "ai_service.tasks": {
+            "handlers": ["celery_console", "celery_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        
+        # Celery loggers
+        "celery": {
+            "handlers": ["celery_console", "celery_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,  # Changed from True
+        },
+        "celery.task": {
+            "handlers": ["celery_console", "celery_file"],
+            "level": "INFO",
+            "propagate": False,  # Changed from True
+        },
+        "celery.worker": {
+            "handlers": ["celery_console", "celery_file"],
+            "level": "INFO",
+            "propagate": False,  # Changed from True
+        },
+        "celery.beat": {
+            "handlers": ["celery_console", "celery_file"],
+            "level": "INFO",
+            "propagate": False,  # Changed from True
+        },
+        "celery.app.trace": {
+            "handlers": ["celery_file"],
+            "level": "INFO",
+            "propagate": False,  # Changed from True
+        },
+        "celery.redirected": {  # Add this for captured stdout/stderr
+            "handlers": ["celery_console", "celery_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        
+        # Middleware loggers
+        "middleware": {
+            "handlers": ["console", "security_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "middleware.security": {
+            "handlers": ["security_file", "error_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        
+        # Service loggers
+        "shared.utils.currency_utils": {
+            "handlers": ["currency_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "shared.utils.circuit_breaker": {
+            "handlers": ["circuit_breaker_file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        
+        # External API loggers
+        "requests": {
+            "handlers": ["currency_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "urllib3": {
+            "handlers": ["currency_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        
+        # Tesseract/PIL logs
+        "PIL": {
+            "handlers": ["ai_processing_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        
+        # Audit logging
+        "audit": {
+            "handlers": ["audit_file", "security_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+    
+    # Root logger
     "root": {
-        "handlers": ["console"],
+        "handlers": ["console_simple", "app_file", "error_file"],
         "level": "INFO",
     },
 }
+
+# Additional logging settings
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+ENABLE_JSON_LOGGING = os.environ.get('ENABLE_JSON_LOGGING', 'False').lower() == 'true'
+
+# Celery logging configuration
+CELERYD_HIJACK_ROOT_LOGGER = False  # Don't let Celery hijack root logger
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+
+
+# ==========================
+# EXCHANGE RATE API CONFIGURATION
+# ==========================
+
+# Your ExchangeRate-API key (get from https://exchangerate-api.com)
+# Free tier: 1,500 requests/month, paid plans available
+EXCHANGE_RATE_API_KEY = os.getenv("EXCHANGE_RATE_API_KEY")  # Replace with your actual API key
+
+# API request timeout in seconds (balance between responsiveness and reliability)
+EXCHANGE_RATE_API_TIMEOUT = os.getenv("EXCHANGE_RATE_API_TIMEOUT", 10)
+
+# Maximum number of retry attempts for failed requests
+EXCHANGE_RATE_MAX_RETRIES = os.getenv("EXCHANGE_RATE_MAX_RETRIES", 3)
+
+# ==========================
+# CIRCUIT BREAKER CONFIGURATION
+# ==========================
+
+# Number of consecutive failures before circuit breaker opens
+# Lower values = more sensitive to failures, higher values = more tolerant
+EXCHANGE_RATE_FAILURE_THRESHOLD = os.getenv("EXCHANGE_RATE_FAILURE_THRESHOLD", 3)
+
+# How long to wait (in seconds) before attempting to recover from open state
+# 300 = 5 minutes (reasonable for currency API which updates hourly)
+EXCHANGE_RATE_RECOVERY_TIMEOUT = os.getenv("EXCHANGE_RATE_RECOVERY_TIMEOUT", 300)
+
+# Number of successful requests needed to close circuit breaker from half-open state
+EXCHANGE_RATE_SUCCESS_THRESHOLD = os.getenv("EXCHANGE_RATE_SUCCESS_THRESHOLD", 2)
+
+# ==========================
+# CURRENCY CONFIGURATION
+# ==========================
+
+# Default currency for new users and fallback operations
+DEFAULT_CURRENCY = os.getenv("DEFAULT_CURRENCY", "USD")
+
+# Base currency used for analytics and cross-currency calculations
+# Should match your business location or primary market
+BASE_CURRENCY = os.getenv("BASE_CURRENCY", "USD")
+
+# ==========================
+# CACHING CONFIGURATION
+# ==========================
+
+# How long to cache fresh exchange rates (in seconds)
+# 3600 = 1 hour (good balance since rates update ~hourly)
+EXCHANGE_RATE_CACHE_TIMEOUT = os.getenv("EXCHANGE_RATE_CACHE_TIMEOUT", 3600)
+
+# How long to keep fallback rates for emergency situations (in seconds)
+# 604800 = 1 week (ensures service continuity during extended outages)
+FALLBACK_CACHE_TIMEOUT = os.getenv("FALLBACK_CACHE_TIMEOUT", 86400)
+
+# Receipt File Upload Configuration (in bytes)
+RECEIPT_MAX_FILE_SIZE= os.getenv("RECEIPT_MAX_FILE_SIZE", 10485760)
+
+
+USE_S3_STORAGE = False  # disable S3
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# celery -A receiptmanager worker --loglevel=info -P gevent -Q default,ai_processing,ai_batch,maintenance,cache,monitoring,export
+# celery -A receiptmanager beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+# celery -A receiptmanager flower --port=5555 --broker=redis://localhost:6379/0

@@ -32,7 +32,7 @@ class EmailService:
     def __init__(self):
         try:
             self.from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
-            self.frontend_url = getattr(settings, 'FRONTEND_URL', None)
+            self.frontend_url = getattr(settings, 'FRONTEND_URL', 'https://receipt-manager-frontend-2dyd.onrender.com')
             
             # Validate configuration
             if not self.from_email:
@@ -58,7 +58,7 @@ class EmailService:
             self._validate_email_address(email)
             self._validate_token(token, "Magic link token")
             
-            magic_url = f"{self.frontend_url}/auth/magic-login?token={token}"
+            magic_url = f"{self.frontend_url}/login?token={token}"
             subject = "Your Magic Login Link - Receipt Manager"
             
             # Context for template
@@ -93,7 +93,7 @@ class EmailService:
             if user_name and len(user_name.strip()) == 0:
                 user_name = None
             
-            verification_url = f"{self.frontend_url}/auth/verify-email?token={token}"
+            verification_url = f"{self.frontend_url}/verify-email?token={token}"
             subject = "Verify Your Email Address - Receipt Manager"
             
             # Context for template
@@ -149,37 +149,6 @@ class EmailService:
         except Exception as e:
             logger.error(f"Unexpected error in send_welcome_email: {str(e)}")
             raise EmailServiceException("Failed to send welcome email")
-    
-    def send_password_reset_email(self, email: str, token: str, user_name: str = None) -> bool:
-        """Send password reset email (for future use)"""
-        try:
-            self._validate_email_address(email)
-            self._validate_token(token, "Password reset token")
-            
-            reset_url = f"{self.frontend_url}/auth/reset-password?token={token}"
-            subject = "Reset Your Password - Receipt Manager"
-            
-            # Context for template
-            context = {
-                'user_name': user_name or 'User',
-                'reset_url': reset_url,
-                'frontend_url': self.frontend_url,
-                'email': email
-            }
-            
-            return self._send_html_email(
-                subject=subject,
-                template_name='emails/password_reset.html',
-                context=context,
-                recipient_list=[email],
-                email_type="password_reset"
-            )
-            
-        except (ValidationException, EmailTemplateException, EmailSendFailedException):
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error in send_password_reset_email: {str(e)}")
-            raise EmailServiceException("Failed to send password reset email")
     
     def _send_html_email(
         self, 

@@ -50,7 +50,7 @@ class SecurityMiddleware(MiddlewareMixin):
         
         # CORS headers for API
         if request.path.startswith('/api/'):
-            allowed_origins = getattr(settings, 'ALLOWED_CORS_ORIGINS', ['http://localhost:3000'])
+            allowed_origins = getattr(settings, 'ALLOWED_CORS_ORIGINS', ['https://857fff45a9c4.ngrok-free.app'])
             origin = request.META.get('HTTP_ORIGIN')
             
             if origin in allowed_origins:
@@ -74,11 +74,11 @@ class SecurityMiddleware(MiddlewareMixin):
         """Check if request should be rate limited"""
         
         # Different limits for different endpoints
-        if request.path.startswith('/api/v1/auth/'):
-            max_requests = self.max_auth_requests_per_ip
+        if request.path.startswith('/auth/'):
+            max_requests = int(self.max_auth_requests_per_ip)
             window_key = f"rate_limit_auth:{ip_address}"
         else:
-            max_requests = self.max_requests_per_ip
+            max_requests = int(self.max_requests_per_ip)
             window_key = f"rate_limit_general:{ip_address}"
         
         # Sliding window rate limiting

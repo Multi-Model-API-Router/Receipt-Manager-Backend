@@ -3,7 +3,6 @@ djangorestframework
 djangorestframework-simplejwt
 PyJWT
 cryptography
-Pillow
 celery 
 redis 
 django-celery-beat
@@ -17,3 +16,29 @@ dj-database-url
 pycryptodome
 psycopg2
 psycopg2-binary
+python-json-logger
+google-generativeai
+google-api-core
+# OCR Dependencies - Updated for Python 3.13
+pytesseract==0.3.13
+Pillow>=10.0.0
+opencv-python>=4.10.0.84
+numpy>=1.26.0  # Compatible with Python 3.13
+
+# Image Processing
+opencv-python-headless==4.10.0.84  # Alternative if GUI not needed
+
+# Utilities
+python-magic==0.4.27
+python-dateutil==2.9.0
+pytz==2024.1
+
+# Code Quality
+black==24.8.0
+flake8==7.1.1
+isort==5.13.2
+
+python-magic-bin
+
+django-storages[boto3]
+

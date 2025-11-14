@@ -47,7 +47,7 @@ class Command(BaseCommand):
                     'magic_url': 'http://test.com/magic',
                     'verification_url': 'http://test.com/verify',
                     'reset_url': 'http://test.com/reset',
-                    'frontend_url': 'http://test.com',
+                    'frontend_url': 'https://receipt-manager-frontend-2dyd.onrender.com',
                     'email': 'test@example.com'
                 }
                 
