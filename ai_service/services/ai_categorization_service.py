@@ -13,7 +13,6 @@ from ..utils.exceptions import (
     ExternalServiceException,
 )
 from shared.utils.exceptions import DatabaseOperationException
-from ..utils.confidence_scoring import ConfidenceScorer
 from .cache_service import ai_cache_service  # ADD THIS IMPORT
 from ..utils.rate_limiter import rate_limiter  # ADD THIS IMPORT
 from .ai_import_service import service_import
