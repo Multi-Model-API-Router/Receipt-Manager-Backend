@@ -77,8 +77,8 @@ class ReceiptUploadView(APIView):
                     'processing_queued': result.get('processing_queued', False),
                     'estimated_time': result.get('estimated_time'),
                     'next_steps': {
-                        'check_status': f"/api/v1/receipts/upload-status/{result['receipt_id']}/",
-                        'view_details': f"/api/v1/receipts/{result['receipt_id']}/"
+                        'check_status': f"/receipts/v1/upload-status/{result['receipt_id']}/",
+                        'view_details': f"/receipts/v1/{result['receipt_id']}/"
                     }
                 }
             )
@@ -346,8 +346,8 @@ class ReceiptConfirmView(APIView):
                     'receipt_id': result['receipt_id'],
                     'accuracy_metrics': result['accuracy_metrics'],  # ← Now includes proper metrics
                     'next_steps': {
-                        'view_entry': f"/api/v1/ledger/entries/{result['ledger_entry_id']}/",
-                        'view_summary': "/api/v1/ledger/summary/"
+                        'view_entry': f"/ledger/v1//entries/{result['ledger_entry_id']}/",
+                        'view_summary': "/ledger/v1//summary/"
                     }
                 }
             )
@@ -418,7 +418,7 @@ class ReceiptListView(generics.ListAPIView):
                     'ordering': ordering
                 }
                 response_data['available_actions'] = {
-                    'upload_new': '/api/v1/receipts/upload/',
+                    'upload_new': '/receipts/v1/upload/',
                     'check_quota': '/api/v1/user/quota-status/'
                 }
                 response_data['cache_hit'] = False

@@ -7,13 +7,11 @@ import pytest
 from datetime import timedelta
 
 
-
 # ========== DJANGO CONFIGURATION - RUNS BEFORE EVERYTHING ==========
-
 
 # Get project root directory (where conftest.py lives)
 project_root = os.getcwd()
-SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-default")
+SECRET_KEY = os.environ.get("SECRET_KEY", "test-secret-key-for-testing-only")
 
 # Clean up sys.path to avoid duplicates
 project_root_normalized = os.path.normpath(project_root)
@@ -21,22 +19,19 @@ sys.path = [os.path.normpath(p) for p in sys.path]  # Normalize all paths
 if project_root_normalized not in sys.path:
     sys.path.insert(0, project_root_normalized)
 
-
 # Set Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'receiptmanager.settings')
-
 
 # Configure Django if not already configured
 import django
 from django.conf import settings
-
 
 if not settings.configured:
     settings.configure(
         DEBUG=True,
         SECRET_KEY='test-secret-key-for-testing-only-never-use-in-production',
         
-        # ✅ ADD THIS - Critical for custom User model
+        # ✅ Critical for custom User model
         AUTH_USER_MODEL='auth_service.User',
         
         # Database
@@ -49,6 +44,7 @@ if not settings.configured:
         
         # Apps - Use full module paths
         INSTALLED_APPS=[
+            'django.contrib.admin',
             'django.contrib.contenttypes',
             'django.contrib.auth',
             'rest_framework',
@@ -59,9 +55,36 @@ if not settings.configured:
         ],
         
         # Middleware
-        MIDDLEWARE=[],
+        MIDDLEWARE=[
+            'corsheaders.middleware.CorsMiddleware',
+            'django.middleware.security.SecurityMiddleware',
+            'django.contrib.sessions.middleware.SessionMiddleware',
+            'django.middleware.common.CommonMiddleware',
+            
+            'shared.middleware.logging_middleware.LoggingContextMiddleware',
+            
+            # If you want CSRF middleware during tests, uncomment these:
+            # 'auth_service.middleware.api_csrf_middleware.CSRFExemptAPIMiddleware',
+            # 'django.middleware.csrf.CsrfViewMiddleware',
+            
+            'django.contrib.auth.middleware.AuthenticationMiddleware',
+            
+            'shared.middleware.security_middleware.SecurityMiddleware',
+            'shared.middleware.security_middleware.IPWhitelistMiddleware',
+            
+            'auth_service.middleware.jwt_blacklist_middleware.JWTBlacklistMiddleware',
+            
+            'django.contrib.messages.middleware.MessageMiddleware',
+            'django.middleware.clickjacking.XFrameOptionsMiddleware',
+            
+            'shared.middleware.logging_middleware.StructuredLoggingMiddleware',
+            
+            'shared.middleware.drf_exceptions.DRFExceptionMiddleware',
+        ],
+
         
-        ROOT_URLCONF='',
+        # ✅ FIX: Set ROOT_URLCONF to your project's urls module
+        ROOT_URLCONF='receiptmanager.urls',  # ← CHANGED FROM '' to 'receiptmanager.urls'
         
         # Cache settings
         CACHES={
@@ -94,23 +117,30 @@ if not settings.configured:
         
         # DRF settings
         REST_FRAMEWORK={
-            'DEFAULT_AUTHENTICATION_CLASSES': [],
-            'DEFAULT_PERMISSION_CLASSES': [],
-            'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+            'DEFAULT_AUTHENTICATION_CLASSES': [
+                'rest_framework_simplejwt.authentication.JWTAuthentication',
+                'rest_framework.authentication.SessionAuthentication',
+            ],
+            'DEFAULT_PERMISSION_CLASSES': [
+                'rest_framework.permissions.IsAuthenticated',
+            ],
+            'PAGE_SIZE': 20,
+            'EXCEPTION_HANDLER': 'shared.utils.exceptions.exception_handler',  # Use your correct handler here
         },
+
         
         # Password hashers (use fast hasher for tests)
         PASSWORD_HASHERS=[
             'django.contrib.auth.hashers.MD5PasswordHasher',
         ],
         
-        # ✅ ADD THESE - Email settings for auth tests
+        # Email settings for auth tests
         DEFAULT_FROM_EMAIL='noreply@test.com',
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
         FRONTEND_URL='http://localhost:3000',
         
-        # ✅ ADD THESE - JWT settings for auth tests
-        SIMPLE_JWT = {
+        # JWT settings for auth tests
+        SIMPLE_JWT={
             'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
             'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
             'ROTATE_REFRESH_TOKENS': True,
@@ -130,8 +160,13 @@ if not settings.configured:
             'TOKEN_TYPE_CLAIM': 'token_type',
             'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
             'JTI_CLAIM': 'jti',
-        }
-
+        },
+        
+        # Rate limiting settings for auth tests
+        MAGIC_LINK_RATE_LIMIT_PER_EMAIL=5,
+        MAGIC_LINK_RATE_LIMIT_PER_IP=20,
+        LOGIN_RATE_LIMIT_PER_IP=20,
+        TOKEN_REFRESH_RATE_LIMIT=50,
     )
     
     # Setup Django
@@ -183,7 +218,8 @@ def authenticated_user(db):
     User = get_user_model()
     user = User.objects.create_user(
         email='test@example.com',
-        password='testpass123'
+        first_name='Test',
+        last_name='User'
     )
     return user
 
@@ -193,3 +229,30 @@ def authenticated_client(api_client, authenticated_user):
     """Return API client with authenticated user"""
     api_client.force_authenticate(user=authenticated_user)
     return api_client, authenticated_user
+
+
+@pytest.fixture
+def sample_user(db):
+    """Create sample user for tests"""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    return User.objects.create_user(
+        email='testuser@example.com',
+        first_name='Test',
+        last_name='User'
+    )
+
+
+@pytest.fixture
+def verified_user(db):
+    """Create verified user for tests"""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user = User.objects.create_user(
+        email='verified@example.com',
+        first_name='Verified',
+        last_name='User'
+    )
+    user.is_email_verified = True
+    user.save()
+    return user

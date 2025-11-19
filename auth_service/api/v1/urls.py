@@ -16,7 +16,7 @@ from .views import (
 urlpatterns = [
     # Authentication endpoints
     path('magic-link/request/', RequestMagicLinkView.as_view(), name='request_magic_link'),
-    path('magic-link/login/', MagicLinkLoginView.as_view(), name='magic_link_login'),
+    path('magic-link/verify/', MagicLinkLoginView.as_view(), name='magic_link_login'),
     path('token/refresh/', RefreshTokenView.as_view(), name='token_refresh'),
     path('token/status/', CheckTokenStatusView.as_view(), name='token_status'),
     
@@ -25,7 +25,7 @@ urlpatterns = [
     
     # Email verification endpoints
     path('email/verify/', EmailVerificationView.as_view(), name='verify_email'),
-    path('email/resend-verification/', ResendVerificationView.as_view(), name='resend_verification'),
+    path('email/resend/', ResendVerificationView.as_view(), name='resend_verification'),
     path('email/update/', UpdateEmailView.as_view(), name='update_email'),
     
     # User profile endpoints

@@ -233,7 +233,7 @@ class ReceiptDetailSerializer(serializers.Serializer):
             actions.append({
                 'action': 'confirm',
                 'method': 'POST',
-                'url': f'/api/v1/receipts/{receipt_id}/confirm/',
+                'url': f'/receipts/v1/{receipt_id}/confirm/',
                 'description': 'Confirm and create ledger entry'
             })
         
@@ -241,14 +241,14 @@ class ReceiptDetailSerializer(serializers.Serializer):
             actions.append({
                 'action': 'check_status',
                 'method': 'GET', 
-                'url': f'/api/v1/receipts/upload-status/{receipt_id}/',
+                'url': f'/receipts/v1/upload-status/{receipt_id}/',
                 'description': 'Check processing status'
             })
         
         actions.append({
             'action': 'view_extracted_data',
             'method': 'GET',
-            'url': f'/api/v1/receipts/{receipt_id}/extracted-data/',
+            'url': f'/receipts/v1/{receipt_id}/extracted-data/',
             'description': 'View extracted data details'
         })
         

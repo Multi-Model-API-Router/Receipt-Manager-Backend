@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class CategoryListView(APIView):
-    """Get all available categories (matches API flow: GET /api/v1/categories/)"""
+    """Get all available categories (matches API flow: GET /categories/v1)"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -107,7 +107,7 @@ class CategoryDetailView(APIView):
             )
 
 class CategoryUsageStatsView(APIView):
-    """Get category usage statistics (matches API flow: GET /api/v1/categories/usage-stats/)"""
+    """Get category usage statistics (matches API flow: GET /categories/v1usage-stats/)"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -170,7 +170,7 @@ class CategoryUsageStatsView(APIView):
 
 
 class UserCategoryPreferencesView(APIView):
-    """Get user's category preferences (GET /api/v1/categories/preferences/)"""
+    """Get user's category preferences (GET /categories/v1preferences/)"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -225,7 +225,7 @@ class UserCategoryPreferencesView(APIView):
 class CategorySuggestView(APIView):
     """
     AI-powered category suggestions based on vendor name
-    GET /api/v1/categories/suggest/?vendor=Starbucks
+    GET /categories/v1suggest/?vendor=Starbucks
     """
     permission_classes = [IsAuthenticated]
     
@@ -278,7 +278,7 @@ class CategorySuggestView(APIView):
 class CategoryValidateView(APIView):
     """
     Validate if category exists and is active
-    GET /api/v1/categories/{category_id}/validate/
+    GET /categories/v1{category_id}/validate/
     """
     permission_classes = [IsAuthenticated]
     

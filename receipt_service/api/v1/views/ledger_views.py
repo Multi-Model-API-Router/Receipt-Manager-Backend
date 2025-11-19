@@ -769,8 +769,8 @@ class LedgerExportView(APIView):
                     'status': 'queued',
                     'estimated_records': total_count,
                     'estimated_completion': self._estimate_completion(total_count),
-                    'status_url': f'/api/v1/ledger/exports/{task_id}/status/',
-                    'download_url': f'/api/v1/ledger/exports/{task_id}/download/'
+                    'status_url': f'/ledger/v1//exports/{task_id}/status/',
+                    'download_url': f'/ledger/v1//exports/{task_id}/download/'
                 }
             }, status=status.HTTP_202_ACCEPTED)
             
@@ -844,7 +844,7 @@ class LedgerExportStatusView(APIView):
                         'task_id': task_id_str,
                         'status': 'completed',
                         'progress': 100,
-                        'download_url': f'/api/v1/ledger/exports/{task_id_str}/download/'
+                        'download_url': f'/ledger/v1//exports/{task_id_str}/download/'
                     }
                 )
             elif status_val == 'failed':
@@ -923,7 +923,7 @@ class LedgerExportDownloadView(APIView):
                     'message': 'Export not ready for download',
                     'data': {
                         'status': status_val or 'queued',
-                        'status_url': f'/api/v1/ledger/exports/{task_id_str}/status/'
+                        'status_url': f'/ledger/v1//exports/{task_id_str}/status/'
                     }
                 }, status=status.HTTP_202_ACCEPTED)
             

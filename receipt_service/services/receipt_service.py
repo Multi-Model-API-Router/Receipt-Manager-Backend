@@ -101,8 +101,8 @@
 #                 'estimated_processing_time': estimated_time,
 #                 'processing_queued': processing_queued,
 #                 'next_steps': {
-#                     'check_status': f'/api/v1/receipts/upload-status/{receipt_id}/',
-#                     'view_details': f'/api/v1/receipts/{receipt_id}/'
+#                     'check_status': f'/receipts/v1/upload-status/{receipt_id}/',
+#                     'view_details': f'/receipts/v1/{receipt_id}/'
 #                 }
 #             }
             
@@ -712,13 +712,13 @@
 #             actions.append({
 #                 'action': 'confirm',
 #                 'method': 'POST',
-#                 'endpoint': f'/api/v1/receipts/{receipt.id}/confirm/',
+#                 'endpoint': f'/receipts/v1/{receipt.id}/confirm/',
 #                 'description': 'Confirm and create ledger entry'
 #             })
 #             actions.append({
 #                 'action': 'view_extracted_data',
 #                 'method': 'GET',
-#                 'endpoint': f'/api/v1/receipts/{receipt.id}/extracted-data/',
+#                 'endpoint': f'/receipts/v1/{receipt.id}/extracted-data/',
 #                 'description': 'View extracted data details'
 #             })
         
@@ -726,7 +726,7 @@
 #             actions.append({
 #                 'action': 'check_status',
 #                 'method': 'GET',
-#                 'endpoint': f'/api/v1/receipts/upload-status/{receipt.id}/',
+#                 'endpoint': f'/receipts/v1/upload-status/{receipt.id}/',
 #                 'description': 'Check processing status'
 #             })
         
@@ -734,7 +734,7 @@
 #             actions.append({
 #                 'action': 'retry',
 #                 'method': 'POST',
-#                 'endpoint': f'/api/v1/receipts/{receipt.id}/retry/',
+#                 'endpoint': f'/receipts/v1/{receipt.id}/retry/',
 #                 'description': 'Retry processing'
 #             })
         
