@@ -19,7 +19,6 @@ User = get_user_model()
 def sample_user(db):
     """Create sample user"""
     user = User.objects.create_user(
-        username='testuser',
         email='user@example.com',
         first_name='Test',
         last_name='User'
@@ -51,7 +50,6 @@ def sample_receipt(db, sample_user, sample_category):
     
     # Create user using auth_service User model
     auth_user = User.objects.create_user(
-        username='receiptuser',
         email='receipt@example.com'
     )
     

@@ -220,7 +220,7 @@ class AuthService:
             # This is the email when magic link was created
             try:
                 user = User.objects.select_related().get(
-                    Q(email__iexact=magic_link_email) | Q(username__iexact=magic_link_email)
+                    Q(email__iexact=magic_link_email)
                 )
                 
                 # Check if account is locked
@@ -245,7 +245,6 @@ class AuthService:
                     with transaction.atomic():
                         user = User.objects.create(
                             email=magic_link_email,
-                            username=magic_link_email,
                             is_email_verified=True,  # Magic link verifies email
                         )
                         is_new_user = True
@@ -259,8 +258,7 @@ class AuthService:
                     # Fetch the user that was just created
                     try:
                         user = User.objects.get(
-                            Q(email__iexact=magic_link_email) | 
-                            Q(username__iexact=magic_link_email)
+                            Q(email__iexact=magic_link_email)
                         )
                         
                         is_new_user = False
@@ -320,7 +318,6 @@ class AuthService:
             'user': {
                 'id': str(user.id),
                 'email': user.email,  # Current email (may differ from magic_link_email)
-                'username': user.username,
                 'first_name': user.first_name or '',
                 'last_name': user.last_name or '',
                 'is_email_verified': user.is_email_verified,
@@ -589,10 +586,9 @@ class AuthService:
                 
                 # ✅ ATOMIC: Update user email AND mark as verified
                 user.email = new_email
-                user.username = new_email  # Keep username in sync
                 user.is_email_verified = True
                 user.updated_at = timezone.now()
-                user.save(update_fields=['email', 'username', 'is_email_verified'])
+                user.save(update_fields=['email', 'is_email_verified'])
                 
                 verification_locked.mark_as_verified()
 

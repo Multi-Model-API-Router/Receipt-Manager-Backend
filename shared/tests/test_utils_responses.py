@@ -30,7 +30,7 @@ class TestSuccessResponse:
 
     def test_success_response_with_data(self):
         """Test success response with data"""
-        data = {"user_id": 123, "username": "testuser"}
+        data = {"user_id": 123,}
         response = success_response(data=data)
         
         assert response.data["data"] == data

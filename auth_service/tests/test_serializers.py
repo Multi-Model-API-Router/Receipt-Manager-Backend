@@ -30,7 +30,6 @@ def sample_user(db):
     """Create sample user in database"""
     User = get_user_model()
     user = User.objects.create_user(
-        username='existing',
         email='existing@example.com',
         first_name='Existing',
         last_name='User'

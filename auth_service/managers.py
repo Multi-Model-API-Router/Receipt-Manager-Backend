@@ -2,6 +2,7 @@
 
 from django.contrib.auth.models import BaseUserManager
 from django.utils.translation import gettext_lazy as _
+import uuid
 
 
 class CustomUserManager(BaseUserManager):
@@ -11,11 +12,22 @@ class CustomUserManager(BaseUserManager):
     """
     
     def create_user(self, email, password=None, **extra_fields):
-        """Create and save a regular user with the given email and password"""
+        """
+        Create and save a regular user with the given email and password
+        Auto-generates username from email if not provided
+        """
         if not email:
             raise ValueError(_('The Email field must be set'))
         
         email = self.normalize_email(email)
+        
+        # Auto-generate username from email if not provided
+        if 'username' not in extra_fields or not extra_fields.get('username'):
+            # Generate unique username: email_prefix + random suffix
+            email_prefix = email.split('@')[0][:20]  # Limit to 20 chars
+            random_suffix = str(uuid.uuid4())[:8]
+            extra_fields['username'] = f"{email_prefix}_{random_suffix}"
+        
         user = self.model(email=email, **extra_fields)
         
         if password:

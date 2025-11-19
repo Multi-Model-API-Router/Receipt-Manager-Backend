@@ -9,8 +9,14 @@ class User(AbstractUser, PermissionsMixin):
     """Extended User model for receipt management"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True, db_index=True)
+    username = models.CharField(
+        _('username'),
+        max_length=150,
+        unique=True,
+        editable=False,  # ← Not editable by users
+        help_text=_('Auto-generated from email. Not used for authentication.')
+    )
     first_name = models.CharField(max_length=150, blank=True)
-    username = models.CharField(max_length=150, unique=True)
     last_name = models.CharField(max_length=150, blank=True)
     is_staff = models.BooleanField(
         _('staff status'),
