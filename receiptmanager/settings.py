@@ -532,10 +532,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 parsed_frontend = urlparse(FRONTEND_URL)
 
+# Read additional allowed origins from env, comma-separated (optional)
+cors_allowed_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+
+if cors_allowed_env:
+    # Parse and strip each origin
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_allowed_env.split(',') if origin.strip()]
+else:
+    # Fallback to frontend URL only
+    CORS_ALLOWED_ORIGINS = [f"{parsed_frontend.scheme}://{parsed_frontend.netloc}"]
+
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    f"{parsed_frontend.scheme}://{parsed_frontend.netloc}",
-]
 
 CORS_ALLOW_CREDENTIALS = True
 
