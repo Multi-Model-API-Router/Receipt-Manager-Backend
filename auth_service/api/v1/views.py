@@ -537,11 +537,12 @@ class UserStatsView(APIView):
             
             if not stats:
                 # Calculate stats with error handling
+                monthly_receipt_limit = getattr(settings, 'MONTHLY_RECEIPT_LIMIT', False)
                 try:
                     stats = {
                         'upload_count': user.monthly_upload_count,
-                        'upload_limit': 50,
-                        'remaining_uploads': max(0, 50 - user.monthly_upload_count),
+                        'upload_limit': monthly_receipt_limit,
+                        'remaining_uploads': max(0, monthly_receipt_limit - user.monthly_upload_count),
                         'account_age_days': (timezone.now() - user.created_at).days,
                         'email_verified': user.is_email_verified,
                         'account_status': 'active' if user.is_active else 'inactive',

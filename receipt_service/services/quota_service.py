@@ -6,6 +6,7 @@ from typing import Dict, Any
 
 from django.utils import timezone
 from django.core.cache import cache
+from django.conf import settings
 
 from .receipt_model_service import model_service
 from ..utils.exceptions import (
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 class QuotaService:
     """Handle user upload quotas and limits with caching"""
     
-    MONTHLY_RECEIPT_LIMIT = 50
+    MONTHLY_RECEIPT_LIMIT = getattr(settings, 'MONTHLY_RECEIPT_LIMIT', False)
     CACHE_TIMEOUT = 300  # 5 minutes
     
     def check_upload_quota(self, user) -> Dict[str, Any]:

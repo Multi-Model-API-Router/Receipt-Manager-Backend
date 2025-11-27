@@ -991,8 +991,9 @@ EXCHANGE_RATE_CACHE_TIMEOUT = os.getenv("EXCHANGE_RATE_CACHE_TIMEOUT", 3600)
 FALLBACK_CACHE_TIMEOUT = os.getenv("FALLBACK_CACHE_TIMEOUT", 86400)
 
 # Receipt File Upload Configuration (in bytes)
+RECEIPT_MIN_FILE_SIZE = int(os.getenv("RECEIPT_MIN_FILE_SIZE", 1024 * 8))  # 8 KB
 RECEIPT_MAX_FILE_SIZE = int(os.getenv("RECEIPT_MAX_FILE_SIZE", 10485760))
-
+MONTHLY_RECEIPT_LIMIT = int(os.getenv("MONTHLY_RECEIPT_LIMIT", 50))
 # Toggle S3 vs local using env
 USE_S3_STORAGE = os.getenv("USE_S3_STORAGE", "false").lower() == "true"
 

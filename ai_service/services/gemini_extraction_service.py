@@ -22,7 +22,8 @@ class GeminiExtractionService:
     """
     GEMINI_MAX_RETRIES = 2  # Total 3 attempts
     GEMINI_RETRY_BACKOFF = [2, 4]  # 2s, 4s exponential
-    MIN_IMAGE_SIZE = 50 * 1024  # 50KB minimum
+    RECEIPT_MIN_FILE_SIZE = int(getattr(settings, 'RECEIPT_MIN_FILE_SIZE', 8 * 1024))  # 8KB
+    RECEIPT_MAX_FILE_SIZE = int(getattr(settings, 'RECEIPT_MAX_FILE_SIZE', 10 * 1024 * 1024))
     
     def __init__(self):
         self.model_name = 'gemini-2.0-flash-exp'
@@ -142,7 +143,7 @@ class GeminiExtractionService:
         not as base64 embedded in text. This matches official examples. [web:38][web:42][web:43]
         """
         # ✅ Fast-fail for invalid input
-        if not preprocessed_image or len(preprocessed_image) < self.MIN_IMAGE_SIZE:
+        if not preprocessed_image or len(preprocessed_image) < self.RECEIPT_MIN_FILE_SIZE:
             logger.warning(f"Image too small for receipt {receipt_id}: {len(preprocessed_image)} bytes")
             return self._get_fallback_extraction_result('Image quality too low')
         
@@ -150,7 +151,7 @@ class GeminiExtractionService:
             categories = []
         
         # Max 20MB image size
-        if len(preprocessed_image) > 20 * 1024 * 1024:
+        if len(preprocessed_image) > self.RECEIPT_MAX_FILE_SIZE:
             logger.warning(f"Image too large for receipt {receipt_id}: {len(preprocessed_image)} bytes")
             return self._get_fallback_extraction_result('Image exceeds 20MB limit')
         

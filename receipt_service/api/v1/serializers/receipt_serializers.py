@@ -4,6 +4,7 @@ from rest_framework import serializers
 from ....services.receipt_model_service import model_service
 from ....utils.currency_utils import currency_manager
 from shared.utils.exceptions import ValidationException
+from django.conf import settings
 
 import logging
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class ReceiptUploadSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid file object")
         
         # Size validation (10MB)
-        max_size = 10 * 1024 * 1024
+        max_size = int(getattr(settings, 'RECEIPT_MAX_FILE_SIZE', 10 * 1024 * 1024))
         if value.size > max_size:
             raise serializers.ValidationError(
                 f"File too large. Max {max_size / (1024*1024):.0f}MB, "
