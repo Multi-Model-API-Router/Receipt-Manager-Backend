@@ -148,15 +148,15 @@ CELERY_BEAT_SCHEDULE = {
     # Receipt Service - Cleanup Tasks (KEEP - Lightweight)
     # ===========================
     'update-category-usage-stats': {
-        'task': 'receipt_service.tasks.cleanup_tasks.update_category_usage_stats',
+        'task': 'receipt_service.tasks.active.cleanup_tasks.update_category_usage_stats',
         'schedule': crontab(minute=0, hour='*/12'),
     },
     'cleanup-expired-cache-entries': {
-        'task': 'receipt_service.tasks.cleanup_tasks.cleanup_expired_cache_entries',
+        'task': 'receipt_service.tasks.active.cleanup_tasks.cleanup_expired_cache_entries',
         'schedule': crontab(minute=0, hour=1),
     },
     'generate-daily-stats-report': {
-        'task': 'receipt_service.tasks.cleanup_tasks.generate_daily_stats_report',
+        'task': 'receipt_service.tasks.active.cleanup_tasks.generate_daily_stats_report',
         'schedule': crontab(minute=30, hour=0),
     },
     
@@ -168,7 +168,7 @@ CELERY_BEAT_SCHEDULE = {
     #     'schedule': crontab(minute=0, hour=3),  # Daily at 3 AM
     # },
     'update-storage-statistics': {
-        'task': 'receipt_service.tasks.file_tasks.update_storage_statistics',
+        'task': 'receipt_service.tasks.active.file_tasks.update_storage_statistics',
         'schedule': crontab(minute='*/30'),  # Every 30 minutes
     },
     
@@ -243,13 +243,13 @@ CELERY_TASK_ROUTES = {
     'ai_service.tasks.ai_tasks.health_check_ai_services': {'queue': 'monitoring'},
     
     # Receipt Service - Cleanup (KEEP ENABLED TASKS)
-    'receipt_service.tasks.cleanup_tasks.update_category_usage_stats': {'queue': 'cache'},
-    'receipt_service.tasks.cleanup_tasks.cleanup_expired_cache_entries': {'queue': 'cache'},
-    'receipt_service.tasks.cleanup_tasks.generate_daily_stats_report': {'queue': 'monitoring'},
+    'receipt_service.tasks.active.cleanup_tasks.update_category_usage_stats': {'queue': 'cache'},
+    'receipt_service.tasks.active.cleanup_tasks.cleanup_expired_cache_entries': {'queue': 'cache'},
+    'receipt_service.tasks.active.cleanup_tasks.generate_daily_stats_report': {'queue': 'monitoring'},
     
     # Receipt Service - File (KEEP ENABLED TASKS)
     # 'receipt_service.tasks.file_tasks.cleanup_old_temp_files': {'queue': 'maintenance'},
-    'receipt_service.tasks.file_tasks.update_storage_statistics': {'queue': 'cache'},
+    'receipt_service.tasks.active.file_tasks.update_storage_statistics': {'queue': 'cache'},
     
     # DISABLED ROUTES (uncomment when enabling tasks)
     # 'receipt_service.tasks.cleanup_tasks.cleanup_old_receipts': {'queue': 'maintenance'},
